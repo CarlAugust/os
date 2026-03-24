@@ -15,6 +15,7 @@ _start:
 
     ldr r0, =0x41
     BL uart_write_char
+    
 
 hang:
     b hang
