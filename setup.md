@@ -18,4 +18,4 @@ With debugger
 qemu-system-arm -M raspi0 -kernel kernel.img -serial stdio -display none -s -S
 
 DEBUGING!!
-arm-none-eabi-gdb boot.elf
+gdb-multiarch boot.elf
