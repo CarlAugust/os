@@ -71,7 +71,9 @@ enum
     MBOX_BASE    = 0xB880,
     MBOX_READ    = (MBOX_BASE + 0x00),
     MBOX_STATUS  = (MBOX_BASE + 0x18),
-    MBOX_WRITE   = (MBOX_BASE + 0x20)
+    MBOX_WRITE   = (MBOX_BASE + 0x20),
+
+	MBOX_FRAME_BUFFER_CHANNEL  = 1,
 };
 
 // A Mailbox message with set clock rate of PL011 to 3MHz tag
@@ -155,6 +157,154 @@ void uart_puts(const char* str)
 	}
 }
 
+struct frame_buffer_msg {
+	uint32_t width;
+	uint32_t height;
+	uint32_t virtual_width;
+	uint32_t virtual_height;
+
+	// Set by GPU
+	uint32_t pitch;
+
+	// Amount of bits per pixel, 24 for RGB
+	uint32_t depth;
+
+	// Should be 0
+	uint32_t x_offset;
+	uint32_t y_offset;
+
+	// Set by GPU
+	uint32_t pointer;
+
+	// Set by GPU
+	uint32_t size;
+} frame_buffer_msg;
+
+typedef struct frame_buffer_info {
+	uint32_t width;
+	uint32_t height;
+
+	uint32_t c_width;
+	uint32_t c_height;
+
+	uint32_t x_offset;
+	uint32_t y_offset;
+
+	// Set by GPU
+	volatile uint8_t* pointer;
+	// Set by GPU
+	uint32_t size;
+
+} frame_buffer_info;
+
+static uint32_t mbox_read() {
+	uint32_t r = 0;
+	do {
+		// Loop untill data is ready
+		while (mmio_read(MBOX_STATUS) & (1U << 30));
+		r = mmio_read(MBOX_READ);
+	} while ((r & 0xF) != MBOX_FRAME_BUFFER_CHANNEL);
+
+	return r & 0xFFFFFFF0;
+}
+
+static void mbox_write(uint32_t v) {
+	// Loop untill mbox isnt full
+	while (mmio_read(MBOX_STATUS) & (1U << 31));
+	mmio_write(MBOX_WRITE, MBOX_FRAME_BUFFER_CHANNEL | (v & 0xFFFFFFF0));
+
+}
+
+
+frame_buffer_info fb_info; 
+static int init_frame_buffer() {
+	// 1 << 22 is just some free space lmao
+	uart_puts("INIT_FRAME_BUFFER: Starting initilization of frame buffer");
+	volatile struct frame_buffer_msg *fb = (volatile struct frame_buffer_msg *)(1 << 22);
+
+	fb->width = 640;
+	fb->height = 480;
+	fb->virtual_width = fb->width;
+	fb->virtual_height = fb->height;
+
+	fb->pitch = 0;
+	fb->depth = 24;
+	fb->pointer = 0;
+	fb->size = 0;
+
+	fb->x_offset = 0;
+	fb->y_offset = 0;
+
+	uart_puts("INIT_FRAME_BUFFER: Writing to mbox\r\n");
+	mbox_write((void *)fb);
+
+	uart_puts("INIT_FRAME_BUFFER: Reading from mbox\r\n");
+	uint32_t r = mbox_read();
+
+	if (r) {
+		uart_puts("ERROR: Writing to MBOC\r\n");
+		return -1;
+	}
+
+	if (!fb->pointer) {
+		uart_puts("ERROR: MBOX didnt return pointer\r\n");
+		return -1;
+	}
+
+
+	fb_info.height = fb->height;
+	fb_info.width = fb->width;
+	fb_info.c_height = fb_info.height / sizeof(uint8_t);
+	fb_info.c_width = fb_info.width / sizeof(uint8_t);
+
+	fb_info.x_offset = 0;
+	fb_info.y_offset = 1;
+
+	fb_info.pointer = (volatile uint8_t*)(fb->pointer);
+	fb_info.size = fb->size;
+
+	uart_puts("INIT_FRAME_BUFFER: initilization success\r\n");
+
+	return 0;
+}
+
+typedef struct rgb {
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
+} rgb;
+
+void screen_set(frame_buffer_info fb_i, rgb color) {
+
+	for (uint32_t cy = 0; cy < fb_i.c_height; cy++) {
+		for (uint32_t cx = 0; cx < fb_i.c_width; cx++) {
+			uint32_t offset = ((cy * fb_i.c_width) + cx) * 3;
+
+			fb_i.pointer[offset] = color.red;
+			fb_i.pointer[offset + 1] = color.green;
+			fb_i.pointer[offset + 2] = color.blue;
+		}
+	}
+
+}
+
+/* itoa: convert n to characters in s */
+void itoa(int n, char s[])
+{
+   int i, sign;
+
+   if ((sign = n) < 0)  /* record sign */
+      n = -n;           /* make n positive */
+   i = 0;
+   do {  /* generate digits in reverse order */
+      s[i++] = n % 10 + '0';  /* get next digit */
+   } while ((n /= 10) > 0);   /* delete it */
+   if (sign < 0)
+      s[i++] = '-';
+   s[i] = '\0';
+}
+
+
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif
@@ -168,8 +318,12 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 #endif
 {
 	// initialize UART for Raspi2
-	uart_init(6);
+	uart_init(2);
 	uart_puts("I AM A ROBOT, AND I EAT BATTERIES!\r\n");
-	
+
+	while (init_frame_buffer() < 0);
+
+	screen_set(fb_info, (rgb){254, 0, 0});
+
 	while (1) {}
 }

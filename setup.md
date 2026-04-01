@@ -15,7 +15,7 @@ arm-none-eabi-objcopy boot.elf -O binary kernel.img
 Run in QEMU
 qemu-system-arm -M raspi0 -kernel kernel.img -serial stdio -display none
 With debugger
-qemu-system-arm -M raspi0 -kernel kernel.img -serial stdio -display none -s -S
+qemu-system-arm -M raspi0 -kernel kernel.elf -serial stdio -display none -s -S
 
 DEBUGING!!
 gdb-multiarch boot.elf
