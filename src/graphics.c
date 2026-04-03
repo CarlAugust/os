@@ -104,11 +104,11 @@ static inline void fill_pixel(uint32_t offset, rgb color) {
 }
 
 void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
-    uint32_t row = 0;
-    for (uint32_t cy = y; cy < y + h; cy++) {
+    uint32_t row = fb_info.pitch * y;
+    for (uint32_t cy = 0; cy < h && cy + y < fb_info.height; cy++) {
 
-        uint32_t px = row;
-		for (uint32_t cx = 0; cx < x + w; cx++) {
+        uint32_t px = row + x * 3;
+		for (uint32_t cx = 0; cx < w && cx + x < fb_info.width; cx++) {
             fill_pixel(px, color);
             px += 3;
 		}

@@ -159,5 +159,9 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	while (init_frame_buffer() < 0);
 	clear_background((rgb){255, 255, 255});
 
-	while (1) {}
+	uint8_t color = 0;
+	while (1) {
+		draw_rectangle(200, 200, 100, 100, (rgb){color, color, color});
+		color++;
+	}
 }
