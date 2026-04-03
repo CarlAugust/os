@@ -29,8 +29,7 @@ typedef struct frame_buffer_msg {
 typedef struct frame_buffer_info {
 	uint32_t width;
 	uint32_t height;
-	uint32_t px_width;
-	uint32_t px_height;
+
 	uint32_t x_offset;
 	uint32_t y_offset;
 
@@ -75,16 +74,15 @@ int init_frame_buffer() {
 
 	if (!fb->pointer) {
 		uart_puts("ERROR: MBOX didnt return pointer\r\n");
-		return -1;
+		return -2;
 	}
 
 
 	fb_info.height = fb->height;
 	fb_info.width = fb->width;
-	fb_info.px_height = fb_info.height / sizeof(uint8_t);
-	fb_info.px_width = fb_info.width / sizeof(uint8_t);
+
 	fb_info.x_offset = 0;
-	fb_info.y_offset = 1;
+	fb_info.y_offset = 0;
 
     fb_info.pitch = fb->pitch;
 
@@ -94,6 +92,14 @@ int init_frame_buffer() {
 	uart_puts("INIT_FRAME_BUFFER: initilization success\r\n");
 
 	return 0;
+}
+
+uint32_t screen_width() {
+    return fb_info.width;
+}
+
+uint32_t screen_height() {
+    return fb_info.height;
 }
 
 static inline void fill_pixel(uint32_t offset, rgb color) {
@@ -106,8 +112,8 @@ static inline void fill_pixel(uint32_t offset, rgb color) {
 void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
     uint32_t row = fb_info.pitch * y;
     for (uint32_t cy = 0; cy < h && cy + y < fb_info.height; cy++) {
-
         uint32_t px = row + x * 3;
+
 		for (uint32_t cx = 0; cx < w && cx + x < fb_info.width; cx++) {
             fill_pixel(px, color);
             px += 3;
@@ -118,5 +124,5 @@ void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
 }
 
 void clear_background(rgb color) {
-    draw_rectangle(0, 0, fb_info.px_width, fb_info.px_height, color);
+    draw_rectangle(0, 0, fb_info.width, fb_info.height, color);
 }
