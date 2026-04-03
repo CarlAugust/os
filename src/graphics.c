@@ -29,12 +29,12 @@ typedef struct frame_buffer_msg {
 typedef struct frame_buffer_info {
 	uint32_t width;
 	uint32_t height;
-
-	uint32_t c_width;
-	uint32_t c_height;
-
+	uint32_t px_width;
+	uint32_t px_height;
 	uint32_t x_offset;
 	uint32_t y_offset;
+
+    uint32_t pitch;
 
 	// Set by GPU
 	volatile uint8_t* pointer;
@@ -81,11 +81,12 @@ int init_frame_buffer() {
 
 	fb_info.height = fb->height;
 	fb_info.width = fb->width;
-	fb_info.c_height = fb_info.height / sizeof(uint8_t);
-	fb_info.c_width = fb_info.width / sizeof(uint8_t);
-
+	fb_info.px_height = fb_info.height / sizeof(uint8_t);
+	fb_info.px_width = fb_info.width / sizeof(uint8_t);
 	fb_info.x_offset = 0;
 	fb_info.y_offset = 1;
+
+    fb_info.pitch = fb->pitch;
 
 	fb_info.pointer = (volatile uint8_t*)(fb->pointer);
 	fb_info.size = fb->size;
@@ -95,15 +96,27 @@ int init_frame_buffer() {
 	return 0;
 }
 
-void screen_set(rgb color) {
+static inline void fill_pixel(uint32_t offset, rgb color) {
 
-	for (uint32_t cy = 0; cy < fb_info.c_height; cy++) {
-		for (uint32_t cx = 0; cx < fb_info.c_width; cx++) {
-			uint32_t offset = ((cy * fb_info.c_width) + cx) * 3;
+	fb_info.pointer[offset] = color.red;
+	fb_info.pointer[offset + 1] = color.green;
+	fb_info.pointer[offset + 2] = color.blue;
+}
 
-			fb_info.pointer[offset] = color.red;
-			fb_info.pointer[offset + 1] = color.green;
-			fb_info.pointer[offset + 2] = color.blue;
+void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
+    uint32_t row = 0;
+    for (uint32_t cy = y; cy < y + h; cy++) {
+
+        uint32_t px = row;
+		for (uint32_t cx = 0; cx < x + w; cx++) {
+            fill_pixel(px, color);
+            px += 3;
 		}
-	}
+
+        row += fb_info.pitch;
+    }
+}
+
+void clear_background(rgb color) {
+    draw_rectangle(0, 0, fb_info.px_width, fb_info.px_height, color);
 }

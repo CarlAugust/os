@@ -157,7 +157,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_puts("I AM A ROBOT, AND I EAT BATTERIES!\r\n");
 
 	while (init_frame_buffer() < 0);
-	screen_set((rgb){0, 255, 255});
+	clear_background((rgb){255, 255, 255});
 
 	while (1) {}
 }
