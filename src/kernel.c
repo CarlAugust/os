@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "kernel.h"
 #include "graphics.h"
+#include "helper.h"
 
 static uint32_t MMIO_BASE;
 
@@ -156,11 +157,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_init(2);
 	uart_puts("I AM A ROBOT, AND I EAT BATTERIES!\r\n");
 
-	while (init_frame_buffer() < 0);
+	int n = -21234;
+	char* potato = "This is Charlie kirk!!! and we carry the flamem";
+	printf("This year at : %i, we will %s today %s\r\n", n, potato, "Pikachu");
 
-	uint8_t color = 0;
-	clear_background((rgb){255, 255, 255});
+	// SOMETHING BAD HAPPENS WHEN I INIT OR SOMETHING TODO:
+	// while (init_frame_buffer() < 0);
+
+	// uint8_t color = 0;
+	// clear_background((rgb){255, 255, 255});
 	while (1) {
-		color++;
+
 	}
 }
