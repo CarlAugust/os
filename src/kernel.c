@@ -29,6 +29,11 @@ static inline uint32_t mmio_read(uint32_t reg)
 	return *(volatile uint32_t*)(MMIO_BASE + reg);
 }
 
+// Adress from mmio
+static inline void mmio_address(uint32_t reg) {
+	printf("You tried to access adress: %i\r\n", (uint32_t*)(MMIO_BASE + reg));
+}
+
 // Loop <delay> times in a way that the compiler won't optimize away
 static inline void delay(int32_t count)
 {
@@ -117,7 +122,7 @@ void uart_puts(const char* str)
 	}
 }
 
-uint32_t mbox_read(uint32_t channel) {
+inline uint32_t mbox_read(uint32_t channel) {
 	uint32_t r = 0;
 	do {
 		// Loop untill mbox data is ready
@@ -128,7 +133,7 @@ uint32_t mbox_read(uint32_t channel) {
 	return r & 0xFFFFFFF0;
 }
 
-void mbox_write(uint32_t v, uint32_t channel) {
+inline void mbox_write(uint32_t v, uint32_t channel) {
 	// Loop untill mbox isnt full
 	while (mmio_read(MBOX_STATUS) & (1U << 31));
 	mmio_write(MBOX_WRITE, channel | (v & 0xFFFFFFF0));
@@ -152,20 +157,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void)r1;
 	(void)atags;
 
-
 	// initialize UART for Raspi2
-	uart_init(2);
-	uart_puts("I AM A ROBOT, AND I EAT BATTERIES!\r\n");
+	uart_init(3);
 
-	int n = -21234;
-	char* potato = "This is Charlie kirk!!! and we carry the flamem";
-	printf("This year at : %i, we will %s today %s\r\n", n, potato, "Pikachu");
+	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\r\nThough its not really tested on actual hardware yet -_-\r\n");
 
-	// SOMETHING BAD HAPPENS WHEN I INIT OR SOMETHING TODO:
-	// while (init_frame_buffer() < 0);
+	// Frame buffer init
+	while (init_frame_buffer() < 0);
+	clear_background((rgb){255, 255, 255});
 
-	// uint8_t color = 0;
-	// clear_background((rgb){255, 255, 255});
 	while (1) {
 
 	}

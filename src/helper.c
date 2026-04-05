@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include <stdint.h>
 #include <stdarg.h>
 
 // Assumes null terminator

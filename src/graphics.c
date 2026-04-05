@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include "kernel.h"
+#include "helper.h"
 
 #define MBOX_FB_CH 1
 
@@ -33,6 +34,7 @@ typedef struct frame_buffer_info {
 	uint32_t y_offset;
 
     uint32_t pitch;
+    uint32_t px_size;
 
 	// Set by GPU
 	volatile uint8_t* pointer;
@@ -44,26 +46,24 @@ typedef struct frame_buffer_info {
 frame_buffer_info fb_info; 
 int init_frame_buffer() {
 	// 1 << 22 is just some free space lmao
-	uart_puts("INIT_FRAME_BUFFER: Starting initilization of frame buffer\r\n");
-	volatile struct frame_buffer_msg *fb = (volatile struct frame_buffer_msg *)(1 << 22);
+	uart_puts("INIT_FRAME_BUFFER: _________________________________\r\n");
 
-	fb->width = 640;
-	fb->height = 480;
-	fb->virtual_width = fb->width;
-	fb->virtual_height = fb->height;
+    static volatile struct frame_buffer_msg fb __attribute__((aligned(16))); 
 
-	fb->pitch = 0;
-	fb->depth = 24;
-	fb->pointer = 0;
-	fb->size = 0;
+	fb.width = 640;
+	fb.height = 480;
+	fb.virtual_width = fb.width;
+	fb.virtual_height = fb.height;
 
-	fb->x_offset = 0;
-	fb->y_offset = 0;
+	fb.pitch = 0;
+	fb.depth = 32;
+	fb.pointer = 0;
+	fb.size = 0;
 
-	uart_puts("INIT_FRAME_BUFFER: Writing to mbox\r\n");
-	mbox_write((uint32_t)fb, MBOX_FB_CH);
+	fb.x_offset = 0;
+	fb.y_offset = 0;
 
-	uart_puts("INIT_FRAME_BUFFER: Reading from mbox\r\n");
+	mbox_write((uint32_t)&fb, MBOX_FB_CH);
 	uint32_t r = mbox_read(MBOX_FB_CH);
 
 	if (r) {
@@ -71,24 +71,26 @@ int init_frame_buffer() {
 		return -1;
 	}
 
-	if (!fb->pointer) {
+	if (!fb.pointer) {
 		uart_puts("ERROR: MBOX didnt return pointer\r\n");
 		return -2;
 	}
 
 
-	fb_info.height = fb->height;
-	fb_info.width = fb->width;
+
+	fb_info.height = fb.height;
+	fb_info.width = fb.width;
 
 	fb_info.x_offset = 0;
 	fb_info.y_offset = 0;
 
-    fb_info.pitch = fb->pitch;
+    fb_info.px_size = fb.depth / 8;
+    fb_info.pitch = fb.pitch;
 
-	fb_info.pointer = (volatile uint8_t*)(fb->pointer);
-	fb_info.size = fb->size;
+	fb_info.pointer = (volatile uint8_t*)(fb.pointer);
+	fb_info.size = fb.size;
 
-	uart_puts("INIT_FRAME_BUFFER: initilization success\r\n");
+	uart_puts("INIT_FRAME_BUFFER: ___________________________\r\n");
 
 	return 0;
 }
@@ -109,13 +111,14 @@ static inline void fill_pixel(uint32_t offset, rgb color) {
 }
 
 void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
+
     uint32_t row = fb_info.pitch * y;
     for (uint32_t cy = 0; cy < h && cy + y < fb_info.height; cy++) {
-        uint32_t px = row + x * 3;
+        uint32_t px = row + x * (fb_info.px_size);
 
 		for (uint32_t cx = 0; cx < w && cx + x < fb_info.width; cx++) {
             fill_pixel(px, color);
-            px += 3;
+            px += fb_info.px_size;
 		}
 
         row += fb_info.pitch;

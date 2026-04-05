@@ -45,6 +45,7 @@ enum
 };
 
 void uart_puts(const char* str);
+void uart_putc(unsigned char c);
 
 uint32_t mbox_read(uint32_t channel);
 void mbox_write(uint32_t v, uint32_t channel);
