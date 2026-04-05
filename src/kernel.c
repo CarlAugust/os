@@ -119,7 +119,7 @@ void uart_puts(const char* str)
 uint32_t mbox_read(uint32_t channel) {
 	uint32_t r = 0;
 	do {
-		// Loop untill data is ready
+		// Loop untill mbox data is ready
 		while (mmio_read(MBOX_STATUS) & (1U << 30));
 		r = mmio_read(MBOX_READ);
 	} while ((r & 0xF) != channel);
@@ -157,11 +157,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_puts("I AM A ROBOT, AND I EAT BATTERIES!\r\n");
 
 	while (init_frame_buffer() < 0);
-	clear_background((rgb){255, 255, 255});
 
 	uint8_t color = 0;
+	clear_background((rgb){255, 255, 255});
 	while (1) {
-		draw_rectangle(200, 200, 100, 100, (rgb){color, color, color});
 		color++;
 	}
 }

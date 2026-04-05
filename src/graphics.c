@@ -29,7 +29,6 @@ typedef struct frame_buffer_msg {
 typedef struct frame_buffer_info {
 	uint32_t width;
 	uint32_t height;
-
 	uint32_t x_offset;
 	uint32_t y_offset;
 
