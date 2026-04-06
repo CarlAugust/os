@@ -50,7 +50,8 @@ $(OUT_DIR)/%.o: $(SRC_DIR)/%.S
 .PHONY: run
 run: $(TARGET_IMG)
 	qemu-system-arm -M raspi2b -serial stdio \
-	    -device loader,file=$(TARGET_IMG),addr=0x8000,cpu-num=0
+	    -device loader,file=$(TARGET_IMG),addr=0x8000,cpu-num=0 \
+		-display gtk
 
 # ── Debug (GDB stub) ──────────────────────────────────────────────────────────
 .PHONY: debug

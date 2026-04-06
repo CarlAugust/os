@@ -2,7 +2,19 @@
 #include "kernel.h"
 #include "helper.h"
 
+#define HEIGHT 480
+#define WIDTH 640
+#define DEPTH 32
 #define MBOX_FB_CH 1
+
+enum {
+	TAG_SET_PHYSICAL = 0x00048003,
+	TAG_SET_VIRTUAL = 0x00048004,
+	TAG_SET_DEPTH = 0x00048005,
+	TAG_SET_V_OFFSET = 0x00048009,
+	TAG_ALLOC_BUFFER = 0x00040001,
+	TAG_GET_PITCH = 0x00040008,
+};
 
 typedef struct frame_buffer_msg {
 	uint32_t width;
@@ -36,78 +48,136 @@ typedef struct frame_buffer_info {
     uint32_t pitch;
     uint32_t px_size;
 
-	// Set by GPU
-	volatile uint8_t* pointer;
-	// Set by GPU
-	uint32_t size;
+	uint8_t *buf[2];
+    int active;
 
 } frame_buffer_info;
 
+
+static volatile uint32_t __attribute__((aligned(16))) mbox[36];
 frame_buffer_info fb_info; 
 int init_frame_buffer() {
 	// 1 << 22 is just some free space lmao
 	uart_puts("INIT_FRAME_BUFFER: _________________________________\r\n");
 
-    static volatile struct frame_buffer_msg fb __attribute__((aligned(16))); 
 
-	fb.width = 640;
-	fb.height = 480;
-	fb.virtual_width = fb.width;
-	fb.virtual_height = fb.height;
+    mbox[0] = 35*4;
+    mbox[1] = 0;
 
-	fb.pitch = 0;
-	fb.depth = 32;
-	fb.pointer = 0;
-	fb.size = 0;
+    mbox[2] = 0x48003;  //set phy wh
+    mbox[3] = 8;
+    mbox[4] = 8;
+    mbox[5] = WIDTH;         //FrameBufferInfo.width
+    mbox[6] = HEIGHT;          //FrameBufferInfo.height
 
-	fb.x_offset = 0;
-	fb.y_offset = 0;
+    mbox[7] = 0x48004;  //set virt wh
+    mbox[8] = 8;
+    mbox[9] = 8;
+    mbox[10] = WIDTH;        //FrameBufferInfo.virtual_width
+    mbox[11] = HEIGHT * 2;         //FrameBufferInfo.virtual_height
 
-	mbox_write((uint32_t)&fb, MBOX_FB_CH);
-	uint32_t r = mbox_read(MBOX_FB_CH);
+    mbox[12] = 0x48009; //set virt offset
+    mbox[13] = 8;
+    mbox[14] = 0;
+    mbox[15] = 0;           //FrameBufferInfo.x_offset
+    mbox[16] = 0;           //FrameBufferInfo.y.offset
 
-	if (r) {
-		uart_puts("ERROR: Writing to MBOC\r\n");
+    mbox[17] = 0x48005; //set depth
+    mbox[18] = 4;
+    mbox[19] = 4;
+    mbox[20] = 32;          //FrameBufferInfo.depth
+
+    mbox[21] = 0x48006; //set pixel order
+    mbox[22] = 4;
+    mbox[23] = 4;
+    mbox[24] = 1;           //RGB, not BGR preferably
+
+    mbox[25] = 0x40001; //get framebuffer, gets alignment on request
+    mbox[26] = 8;
+    mbox[27] = 8;
+    mbox[28] = 4096;        //FrameBufferInfo.pointer
+    mbox[29] = 0;           //FrameBufferInfo.size
+
+    mbox[30] = 0x40008; //get pitch
+    mbox[31] = 4;
+    mbox[32] = 4;
+    mbox[33] = 0;           //FrameBufferInfo.pitch
+
+    mbox[34] = 0;
+
+	mbox_write((uint32_t)mbox, 8);
+	uint32_t r = mbox_read(8);
+
+	if (mbox[1] != 0x80000000) {
+		printf("Error: setting up frame_buffer\r\n");
 		return -1;
-	}
-
-	if (!fb.pointer) {
-		uart_puts("ERROR: MBOX didnt return pointer\r\n");
-		return -2;
-	}
+	};
 
 
-
-	fb_info.height = fb.height;
-	fb_info.width = fb.width;
+	fb_info.height = HEIGHT;
+	fb_info.width = WIDTH;
 
 	fb_info.x_offset = 0;
 	fb_info.y_offset = 0;
 
-    fb_info.px_size = fb.depth / 8;
-    fb_info.pitch = fb.pitch;
+    fb_info.px_size = DEPTH / 8;
+    fb_info.pitch = mbox[33];
 
-	fb_info.pointer = (volatile uint8_t*)(fb.pointer);
-	fb_info.size = fb.size;
+    uint32_t addr  = mbox[28] & 0x3FFFFFFF; // strip GPU bus address bit
+
+    fb_info.active = 0;
+
+    fb_info.buf[0] = (uint8_t *)addr;
+    fb_info.buf[1] = (uint8_t *)(addr + fb_info.pitch * fb_info.height);
+
+	memset((void*)mbox, 0, sizeof(mbox));
 
 	uart_puts("INIT_FRAME_BUFFER: ___________________________\r\n");
 
 	return 0;
 }
 
-uint32_t screen_width() {
-    return fb_info.width;
+void frame_buffer_swap() {
+    int next = 1 - fb_info.active;
+
+	mbox[0]  = 8 * 4;
+	mbox[1]  = 0x00000000;
+	mbox[2]  = 0x00048009;  // set virtual offset
+	mbox[3]  = 8;
+	mbox[4]  = 0;
+	mbox[5]  = 0;
+	mbox[6]  = next * fb_info.height;
+
+	mbox[7] = 0x00000000;  // end tag
+
+    mbox_write((uint32_t)mbox, 8);
+    mbox_read(8);
+
+	if (mbox[1] != 0x80000000) {
+		printf("Error: swapping frame_buffer\r\n");
+		return -1;
+	};
+
+    fb_info.active = next;
+
+    memset((void*)mbox, 0, sizeof(mbox));  
+
 }
 
-uint32_t screen_height() {
-    return fb_info.height;
+inline uint8_t *fb_back() {
+	// Default to use zero
+	/*
+		TODO: Is there some way to fix framebuffering not working???	
+	*/
+    return fb_info.buf[1 - fb_info.active];
 }
 
 static inline void fill_pixel(uint32_t offset, rgb color) {
-
-	fb_info.pointer[offset] = color.red;
-	fb_info.pointer[offset + 1] = color.green;
-	fb_info.pointer[offset + 2] = color.blue;
+	uint8_t *p = fb_back();
+	p[offset] = color.red;
+	p[offset + 1] = color.green;
+	p[offset + 2] = color.blue;
+	p[offset + 3] = 0xFF;
 }
 
 void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
@@ -127,4 +197,12 @@ void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
 
 void clear_background(rgb color) {
     draw_rectangle(0, 0, fb_info.width, fb_info.height, color);
+}
+
+uint32_t screen_width() {
+    return fb_info.width;
+}
+
+uint32_t screen_height() {
+    return fb_info.height;
 }

@@ -42,6 +42,12 @@ enum
     MBOX_READ    = (MBOX_BASE + 0x00),
     MBOX_STATUS  = (MBOX_BASE + 0x18),
     MBOX_WRITE   = (MBOX_BASE + 0x20),
+
+    // Offset for system timer, 1mhz clock 1 tick is 1 microsecond
+    SYSTEM_TIMER_BASE = 0x3000,
+    SYSTEM_TIMER_CLO = (SYSTEM_TIMER_BASE + 0x04),
+    SYSTEM_TIMER_CHI = (SYSTEM_TIMER_BASE + 0x08),
+
 };
 
 void uart_puts(const char* str);

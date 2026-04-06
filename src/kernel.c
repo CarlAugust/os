@@ -3,6 +3,7 @@
 #include "kernel.h"
 #include "graphics.h"
 #include "helper.h"
+#include "units.h"
 
 static uint32_t MMIO_BASE;
 
@@ -140,6 +141,15 @@ inline void mbox_write(uint32_t v, uint32_t channel) {
 
 }
 
+uint32_t timer_read_us() {
+	return mmio_read(SYSTEM_TIMER_CLO);
+}
+
+void time_wait_us(uint32_t us) {
+	uint32_t start = timer_read_us();	
+	while (timer_read_us() - start < us);
+}
+
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif
@@ -164,9 +174,17 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	// Frame buffer init
 	while (init_frame_buffer() < 0);
-	clear_background((rgb){255, 255, 255});
+
+	uint32_t start = timer_read_us();
+
 
 	while (1) {
+		uint32_t next = timer_read_us();
+		if (next - start > SECOND_30 * 4) {
+			clear_background((rgb){12,41,233});
 
+			start = next;
+			frame_buffer_swap();
+		}
 	}
 }
