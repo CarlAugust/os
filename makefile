@@ -14,7 +14,7 @@ OUT_DIR := out
 
 # Auto-discover sources
 C_SRCS  := $(shell find $(SRC_DIR) -name '*.c')
-S_SRCS  := $(shell find $(SRC_DIR) -name 'bootpi2.S')
+S_SRCS  := $(shell find $(SRC_DIR) -name 'bootpi0.S')
 
 # Derive object files (mirror src layout into out/)
 C_OBJS  := $(patsubst $(SRC_DIR)/%.c,  $(OUT_DIR)/%.o, $(C_SRCS))
@@ -49,14 +49,14 @@ $(OUT_DIR)/%.o: $(SRC_DIR)/%.S
 # ── Run in QEMU ───────────────────────────────────────────────────────────────
 .PHONY: run
 run: $(TARGET_IMG)
-	qemu-system-arm -M raspi2b -serial stdio \
+	qemu-system-arm -M raspi0 -serial stdio \
 	    -device loader,file=$(TARGET_IMG),addr=0x8000,cpu-num=0 \
 		-display gtk
 
 # ── Debug (GDB stub) ──────────────────────────────────────────────────────────
 .PHONY: debug
 debug: $(TARGET_IMG)
-	qemu-system-arm -M raspi2b -serial stdio \
+	qemu-system-arm -M raspi0 -serial stdio \
 	    -device loader,file=$(TARGET_IMG),addr=0x8000,cpu-num=0 \
 	    -s -S
 

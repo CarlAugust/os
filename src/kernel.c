@@ -167,8 +167,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void)r1;
 	(void)atags;
 
-	// initialize UART for Raspi2
-	uart_init(3);
+	// initialize UART for Raspi0
+	uart_init(5);
 
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\r\nThough its not really tested on actual hardware yet -_-\r\n");
 
@@ -181,7 +181,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	while (1) {
 		uint32_t next = timer_read_us();
 		if (next - start > SECOND_30 * 4) {
-			clear_background((rgb){12,41,233});
+			
+			draw_circle(100, 100, 20, (rgb){100,23,134});
 
 			start = next;
 			frame_buffer_swap();

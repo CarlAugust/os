@@ -106,7 +106,7 @@ int init_frame_buffer() {
     mbox[34] = 0;
 
 	mbox_write((uint32_t)mbox, 8);
-	uint32_t r = mbox_read(8);
+	mbox_read(8);
 
 	if (mbox[1] != 0x80000000) {
 		printf("Error: setting up frame_buffer\r\n");
@@ -137,7 +137,7 @@ int init_frame_buffer() {
 	return 0;
 }
 
-void frame_buffer_swap() {
+int frame_buffer_swap() {
     int next = 1 - fb_info.active;
 
 	mbox[0]  = 8 * 4;
@@ -162,14 +162,16 @@ void frame_buffer_swap() {
 
     memset((void*)mbox, 0, sizeof(mbox));  
 
+	return 0;
 }
 
 inline uint8_t *fb_back() {
-	// Default to use zero
+
+	// Default to use zero because of a problem with QEMU???
 	/*
 		TODO: Is there some way to fix framebuffering not working???	
 	*/
-    return fb_info.buf[1 - fb_info.active];
+    return fb_info.buf[0];
 }
 
 static inline void fill_pixel(uint32_t offset, rgb color) {
@@ -193,6 +195,39 @@ void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
 
         row += fb_info.pitch;
     }
+}
+
+void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgb color) {
+	// Move to top left
+	uint32_t y1 = y - r;
+	y1 > fb_info.height ? y1 = 0 : 0;
+	uint32_t x1 = x - r;
+	x1 > fb_info.width ? x1 = 0 : 0;
+	uint32_t r2 = r*r;
+
+	uint32_t row = fb_info.pitch * y1;
+
+    for (uint32_t cy = 0; cy < 2 * r && cy + y1 < fb_info.height; cy++) {
+
+        uint32_t px = row + x * (fb_info.px_size);
+
+		uint32_t d2 = (y - (cy + y1));
+		uint32_t d2sqr = d2 * d2;
+
+		for (uint32_t cx = 0; cx < 2 * r && cx + x1 < fb_info.width; cx++) {
+			uint32_t d1 = (x - (cx + x1));
+			uint32_t d1sqr = d1 * d1;
+
+			if (d1sqr + d2sqr <= r2) {
+				fill_pixel(px, color);
+			}
+
+            px += fb_info.px_size;
+		}
+
+        row += fb_info.pitch;
+    }
+
 }
 
 void clear_background(rgb color) {
