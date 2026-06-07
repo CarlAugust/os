@@ -5,20 +5,12 @@
 frame_buffer_info fb_info;
 
 void init_window() {
-	while (set_frame_buffer_info(&fb_info) < 0);
-}
-
-inline uint8_t *fb_back() {
-
-	// Default to use zero because of a problem with QEMU???
-	/*
-		TODO: Is there some way to fix framebuffering not working???	
-	*/
-    return fb_info.buf[0];
+	// TODO: Make this a kernel function that simply gives the frambuffer
+	while (mbox_set_frame_buffer_info(&fb_info) < 0);
 }
 
 static inline void fill_pixel(uint32_t offset, rgb color) {
-	uint8_t *p = fb_back();
+	uint8_t *p = fb_info.buf[0];
 	p[offset] = color.red;
 	p[offset + 1] = color.green;
 	p[offset + 2] = color.blue;

@@ -16,4 +16,4 @@ typedef struct frame_buffer_info {
 
 } frame_buffer_info;
 
-int set_frame_buffer_info(frame_buffer_info *fb_info);
+int mbox_set_frame_buffer_info(frame_buffer_info *fb_info);

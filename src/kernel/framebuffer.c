@@ -19,8 +19,8 @@ enum {
 };
 
 static volatile uint32_t __attribute__((aligned(16))) mbox[36];
-int set_frame_buffer_info(frame_buffer_info *fb_info) {
-	// 1 << 22 is just some free space lmao
+int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
+    
 	uart_puts("INIT_FRAME_BUFFER: _________________________________\r\n");
 
 
