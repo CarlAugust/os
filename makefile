@@ -4,7 +4,7 @@ OBJCOPY := arm-none-eabi-objcopy
 
 # Flags
 CPU     := arm1176jzf-s
-CFLAGS  := -mcpu=$(CPU) -fpic -ffreestanding -std=gnu99 -O2 -Wall -Wextra
+CFLAGS  := -mcpu=$(CPU) -fpic -ffreestanding -std=gnu99 -O2 -Wall -Wextra -I ./src
 ASFLAGS := -mcpu=$(CPU) -fpic -ffreestanding
 LDFLAGS := -T linker.ld -ffreestanding -O2 -nostdlib -lgcc
 
