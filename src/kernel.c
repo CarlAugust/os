@@ -180,7 +180,7 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	while (1) {
 		uint32_t next = timer_read_us();
-		if (next - start > SECOND_30 * 4) {
+		if (next - start > SECOND_30_MS * 4) {
 			
 			draw_circle(100, 100, 20, (rgb){100,23,134});
 

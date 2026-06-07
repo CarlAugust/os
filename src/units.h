@@ -1,6 +1,5 @@
 enum {
     SECOND = 1000000,
-    SECOND_60 = 16666,
-    SECOND_30 = 33333,
-    
+    SECOND_60_MS = 16666,
+    SECOND_30_MS = 33333,
 };

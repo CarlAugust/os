@@ -14,9 +14,8 @@ void memset(void* ptr, int c, uint32_t n) {
 // Assumes null terminator
 uint32_t strlen(const char* str) {
     uint32_t size = 0;
-    while (str[size] != '\0') {
-        size++;
-    }
+    while (str[size] != '\0') size++;
+
     return size;
 }
 
@@ -36,7 +35,6 @@ void reverse(char* str) {
 
 void int_to_char(int v, char buffer[32]) {
     uint32_t n = 0;
-
     uint8_t negative = v < 0;
     if (negative) v *= (-1);
 
@@ -65,7 +63,6 @@ Support only int and char* with %i and %s
 void printf(const char* str, ...) {
 
     va_list args;
-
     va_start(args, str);
 
     for (uint32_t i = 0; str[i] != '\0'; i++) {
@@ -78,13 +75,8 @@ void printf(const char* str, ...) {
                 char* s = va_arg(args, char*);
                 uart_puts(s);
                 i++;
-            } else {
-
-                uart_putc(str[i]);
-            }
-        } else {
-            uart_putc(str[i]);
-        }
+            } else uart_putc(str[i]);
+        } else uart_putc(str[i]);
     }
 
     va_end(args);
