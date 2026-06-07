@@ -1,9 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "kernel.h"
-#include "graphics.h"
-#include "helper.h"
-#include "units.h"
+#include <kernel/kernel.h>
+#include <kernel/helper.h>
+
+/*
+	Realistically i dont want any includes from outside of kernel folder in any kernel file
+	But this is currently for testing
+*/
+#include <sdk/graphics.h>
 
 static uint32_t MMIO_BASE;
 
@@ -172,20 +176,16 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\r\nThough its not really tested on actual hardware yet -_-\r\n");
 
-	// Frame buffer init
-	while (init_frame_buffer() < 0);
-
-	uint32_t start = timer_read_us();
-
+	init_window();
+	
+	uint32_t start = timer_read_us();	
 
 	while (1) {
 		uint32_t next = timer_read_us();
-		if (next - start > SECOND_30_MS * 4) {
+		if (next - start > 30000 * 4) {
 			
 			draw_circle(100, 100, 20, (rgb){100,23,134});
-
 			start = next;
-			frame_buffer_swap();
 		}
 	}
 }
