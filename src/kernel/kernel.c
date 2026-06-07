@@ -123,6 +123,9 @@ unsigned char uart_getc()
 void uart_puts(const char* str)
 {
 	for (size_t i = 0; str[i] != '\0'; i++) {
+		if (str[i] == '\n') {
+			uart_putc('\r');
+		}
 		uart_putc((unsigned char)str[i]);
 	}
 }
@@ -173,19 +176,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	// initialize UART for Raspi0
 	uart_init(5);
-
-	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\r\nThough its not really tested on actual hardware yet -_-\r\n");
-
-	init_window();
-	
-	uint32_t start = timer_read_us();	
+	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
 
 	while (1) {
-		uint32_t next = timer_read_us();
-		if (next - start > 30000 * 4) {
-			
-			draw_circle(100, 100, 20, (rgb){100,23,134});
-			start = next;
-		}
+		char c = uart_getc();
+		printf("You typed %c\n", c);
 	}
 }

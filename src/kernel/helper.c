@@ -50,7 +50,7 @@ void int_to_char(int v, char buffer[32]) {
     reverse(buffer);
 }
 
-void print_int(int v) {
+void uart_putint(int v) {
     char buffer[32];
     int_to_char(v, buffer);
     uart_puts(buffer);
@@ -67,15 +67,18 @@ void printf(const char* str, ...) {
 
     for (uint32_t i = 0; str[i] != '\0'; i++) {
         if (str[i] == '%' && str[i + 1] != '\0') {
+
             if (str[i + 1] == 'i') {
-                int n = va_arg(args, int);
-                print_int(n);
+                uart_putint(va_arg(args, int));
                 i++;
             } else if (str[i + 1] == 's') {
-                char* s = va_arg(args, char*);
-                uart_puts(s);
+                uart_puts(va_arg(args, char*));
+                i++;
+            } else if (str[i + 1] == 'c') {
+                uart_putc((char)va_arg(args, int));
                 i++;
             } else uart_putc(str[i]);
+
         } else uart_putc(str[i]);
     }
 
