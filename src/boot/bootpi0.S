@@ -14,6 +14,21 @@
 // r2 -> 0x00000100 - start of ATAGS
 // preserve these registers as argument for kernel_main
 _start:	
+	b reset_handler      @ 0x8000 : Reset
+    b undef_handler      @ 0x8004 : Undefined Instruction
+    b swi_handler        /* 0x8008 : Software Interrupt (SVC) */
+    b prefetch_handler   /* 0x800C : Prefetch Abort */
+    b data_handler       /* 0x8010 : Data Abort */
+    b reserved_handler   /* 0x8014 : Reserved slot */
+    b irq_handler        /* 0x8018 : IRQ (Normal Interrupt) */
+    b fiq_handler        /* 0x801C : FIQ (Fast Interrupt) */
+
+reset_handler:
+
+	// VBAR is at 0x8000
+	ldr r3, =_start
+	mcr p15, 0, r3, c12, c0, 0
+
 	// Setup the stack.
 	mov sp, #0x8000
 
@@ -36,10 +51,61 @@ _start:
 	blo 1b
 
 	// Call kernel_main
-	ldr r3, =kernel_main
-	blx r3
+	bl kernel_main
 
 	// halt
 halt:
 	wfe
 	b halt
+
+
+// Interupt handlers
+
+.globl undef_handler
+undef_handler:
+    push {r0-r12, lr}
+    bl c_undef_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4
+
+.globl swi_handler
+swi_handler:
+    push {r0-r12, lr}
+    bl c_swi_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4
+
+.globl prefetch_handler
+prefetch_handler:
+    push {r0-r12, lr}
+    bl c_prefetch_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4
+
+.globl data_handler
+data_handler:
+    push {r0-r12, lr}
+    bl c_data_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #8
+
+.globl reserved_handler
+reserved_handler:
+    push {r0-r12, lr}
+    bl c_reserved_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4
+
+.globl irq_handler
+irq_handler:
+    push {r0-r12, lr}
+    bl c_irq_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4
+
+.globl fiq_handler
+fiq_handler:
+    push {r0-r12, lr}
+    bl c_fiq_handler
+    pop {r0-r12, lr}
+    subs pc, lr, #4

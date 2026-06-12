@@ -4,11 +4,33 @@
 #include <kernel/kernel.h>
 #include <kernel/helper.h>
 
-/*
-	Realistically i dont want any includes from outside of kernel folder in any kernel file
-	But this is currently for testing
-*/
-#include <sdk/graphics.h>
+void c_undef_handler(void) {
+	printf("undef handler was evoked\n");
+}
+
+void c_swi_handler(void) {
+	printf("swi handler was evoked\n");
+}
+
+void c_prefetch_handler(void) {
+	printf("prefetch handler was evoked\n");
+}
+
+void c_data_handler(void) {
+	printf("data handler was evoked\n");
+}
+
+void c_reserved_handler(void) {
+	printf("reserve handler was evoked\n");
+}
+
+void c_irq_handler(void) {
+	printf("irq handler was evoked\n");
+}
+
+void c_fiq_handler(void) {
+	printf("fiq handler was evoked\n");
+}
 
 static uint32_t MMIO_BASE;
 
@@ -181,12 +203,15 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	// initialize UART for Raspi0
 	uart_init(5);
+	__asm__ volatile("cpsie i"); // Enable interupts
+
 	init_printf(NULL, putc);
+
 
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
 	
 	while (1) {
-		char c = uart_getc();
-		printf("You typed %c\n", c);
+		time_wait_us(200000);
+		printf("A epoke passed... \n");
 	}
 }
