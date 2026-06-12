@@ -21,7 +21,7 @@ enum {
 static volatile uint32_t __attribute__((aligned(16))) mbox[36];
 int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
     
-	uart_puts("INIT_FRAME_BUFFER: _________________________________\r\n");
+	uart_puts("INIT_FRAME_BUFFER: _________________________________\n");
 
 
     mbox[0] = 35*4;
@@ -72,7 +72,7 @@ int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
 	mbox_read(8);
 
 	if (mbox[1] != 0x80000000) {
-		printf("Error: setting up frame_buffer\r\n");
+		uart_puts("Error: setting up frame_buffer\n");
 		return -1;
 	};
 
@@ -93,7 +93,7 @@ int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
     fb_info->buf[0] = (uint8_t *)addr;
     fb_info->buf[1] = (uint8_t *)(addr + fb_info->pitch * fb_info->height);
 
-	uart_puts("INIT_FRAME_BUFFER: ___________________________\r\n");
+	uart_puts("INIT_FRAME_BUFFER: ___________________________\n");
 
 	return 0;
 }

@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/printf.h>
 #include <kernel/kernel.h>
 #include <kernel/helper.h>
 
@@ -113,6 +114,10 @@ void uart_putc(unsigned char c)
 	mmio_write(UART0_DR, c);
 }
 
+void putc(void* p, char c) {
+	uart_putc(c);
+}
+
 unsigned char uart_getc()
 {
     // Wait for UART to have received something.
@@ -176,8 +181,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	// initialize UART for Raspi0
 	uart_init(5);
-	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
+	init_printf(NULL, putc);
 
+	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
+	
 	while (1) {
 		char c = uart_getc();
 		printf("You typed %c\n", c);

@@ -4,7 +4,7 @@ OBJCOPY := arm-none-eabi-objcopy
 
 # Flags
 CPU     := arm1176jzf-s
-CFLAGS  := -mcpu=$(CPU) -fpic -ffreestanding -std=gnu99 -O2 -Wall -Wextra -I ./src
+CFLAGS  := -mcpu=$(CPU) -mgeneral-regs-only -fpic -ffreestanding -std=gnu99 -O2 -Wall -Wextra -I ./src
 ASFLAGS := -mcpu=$(CPU) -fpic -ffreestanding
 LDFLAGS := -T linker.ld -ffreestanding -O2 -nostdlib -lgcc
 
@@ -34,7 +34,7 @@ $(TARGET_IMG): $(TARGET_ELF)
 
 # ── Link ──────────────────────────────────────────────────────────────────────
 $(TARGET_ELF): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -mcpu=$(CPU) $(LDFLAGS) -o $@ $^ -lgcc
 
 # ── Compile C ─────────────────────────────────────────────────────────────────
 $(OUT_DIR)/%.o: $(SRC_DIR)/%.c
