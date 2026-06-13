@@ -1,8 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
+
 #include <kernel/printf.h>
 #include <kernel/kernel.h>
 #include <kernel/helper.h>
+#include <kernel/irq.h>
 
 void c_undef_handler(void) {
 	printf("undef handler was evoked\n");
@@ -24,49 +26,8 @@ void c_reserved_handler(void) {
 	printf("reserve handler was evoked\n");
 }
 
-void c_irq_handler(void) {
-	printf("irq handler was evoked\n");
-}
-
 void c_fiq_handler(void) {
 	printf("fiq handler was evoked\n");
-}
-
-static uint32_t MMIO_BASE;
-
-// The MMIO area base address, depends on board type
-static inline void mmio_init(int raspi)
-{
-    switch (raspi) {
-        case 2:
-        case 3:  MMIO_BASE = 0x3F000000; break; // for raspi2 & 3
-        case 4:  MMIO_BASE = 0xFE000000; break; // for raspi4
-        default: MMIO_BASE = 0x20000000; break; // for raspi1, raspi zero etc.
-    }
-}
-
-// Memory-Mapped I/O output
-static inline void mmio_write(uint32_t reg, uint32_t data)
-{
-	*(volatile uint32_t*)(MMIO_BASE + reg) = data;
-}
-
-// Memory-Mapped I/O input
-static inline uint32_t mmio_read(uint32_t reg)
-{
-	return *(volatile uint32_t*)(MMIO_BASE + reg);
-}
-
-// Adress from mmio
-static inline void mmio_address(uint32_t reg) {
-	printf("You tried to access adress: %i\r\n", (uint32_t*)(MMIO_BASE + reg));
-}
-
-// Loop <delay> times in a way that the compiler won't optimize away
-static inline void delay(int32_t count)
-{
-	asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-		 : "=r"(count): [count]"0"(count) : "cc");
 }
 
 // A Mailbox message with set clock rate of PL011 to 3MHz tag
@@ -204,10 +165,10 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// initialize UART for Raspi0
 	uart_init(5);
 	init_printf(NULL, putc);
+	irq_init();
 
-	
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
-	
+
 	while (1) {
 		time_wait_us(200000);
 		printf("A epoke passed... \n");

@@ -66,7 +66,7 @@ undef_handler:
     push {r0-r12, lr}
     bl c_undef_handler
     pop {r0-r12, lr}
-    subs pc, lr, #4
+    subs pc, lr, #0
 
 .globl swi_handler
 swi_handler:
