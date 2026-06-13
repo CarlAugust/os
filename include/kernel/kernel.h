@@ -48,6 +48,19 @@ enum
     SYSTEM_TIMER_CLO = (SYSTEM_TIMER_BASE + 0x04),
     SYSTEM_TIMER_CHI = (SYSTEM_TIMER_BASE + 0x08),
 
+    // IRQ
+    IRQ_BASE            = 0xB200,
+    IRQ_BASIC_PENDING   = (IRQ_BASE + 0x00),
+    IRQ_PENDING_1       = (IRQ_BASE + 0x04),
+    IRQ_PENDING_2       = (IRQ_BASE + 0x08),
+    FIQ_CONTROL         = (IRQ_BASE + 0x0C),
+    ENABLE_IRQS_1       = (IRQ_BASE + 0x10),
+    ENABLE_IRQS_2       = (IRQ_BASE + 0x14),
+    ENABLE_BASIC_IRQS   = (IRQ_BASE + 0x18),
+    DISABLE_IRQS_1      = (IRQ_BASE + 0x1C),
+    DISABLE_IRQS_2      = (IRQ_BASE + 0x20),
+    DISABLE_BASIC_IRQS  = (IRQ_BASE + 0x24),
+
 };
 
 void uart_puts(const char* str);
