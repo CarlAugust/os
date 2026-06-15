@@ -35,6 +35,19 @@ volatile unsigned int  __attribute__((aligned(16))) mbox[9] = {
     9*4, 0, 0x38002, 12, 8, 2, 3000000, 0 ,0
 };
 
+uint32_t MMIO_BASE = 0;
+
+// The MMIO area base address, depends on board type
+void mmio_init(int raspi)
+{
+    switch (raspi) {
+        case 2:
+        case 3:  MMIO_BASE = 0x3F000000; break; // for raspi2 & 3
+        case 4:  MMIO_BASE = 0xFE000000; break; // for raspi4
+        default: MMIO_BASE = 0x20000000; break; // for raspi1, raspi zero etc.
+    }
+}
+
 void uart_init(int raspi)
 {
 	mmio_init(raspi);
@@ -165,12 +178,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	// initialize UART for Raspi0
 	uart_init(5);
 	init_printf(NULL, putc);
-	irq_init();
 
+	irq_init();
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
 
+	uint32_t time = timer_read_us();
+	mmio_write(SYSTEM_TIMER_CS, (1 << 1));
+	mmio_write(SYSTEM_TIMER_C1, time + 100);
 	while (1) {
-		time_wait_us(200000);
-		printf("A epoke passed... \n");
+
 	}
 }

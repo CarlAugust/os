@@ -45,8 +45,13 @@ enum
 
     // Offset for system timer, 1mhz clock 1 tick is 1 microsecond
     SYSTEM_TIMER_BASE = 0x3000,
+    SYSTEM_TIMER_CS = (SYSTEM_TIMER_BASE + 0x00),
     SYSTEM_TIMER_CLO = (SYSTEM_TIMER_BASE + 0x04),
     SYSTEM_TIMER_CHI = (SYSTEM_TIMER_BASE + 0x08),
+    SYSTEM_TIMER_C0 = (SYSTEM_TIMER_BASE + 0x0C),
+    SYSTEM_TIMER_C1 = (SYSTEM_TIMER_BASE + 0x10),
+    SYSTEM_TIMER_C2 = (SYSTEM_TIMER_BASE + 0x14),
+    SYSTEM_TIMER_C3 = (SYSTEM_TIMER_BASE + 0x18),
 
     // IRQ
     IRQ_BASE            = 0xB200,
@@ -63,18 +68,7 @@ enum
 
 };
 
-static uint32_t MMIO_BASE;
-
-// The MMIO area base address, depends on board type
-static inline void mmio_init(int raspi)
-{
-    switch (raspi) {
-        case 2:
-        case 3:  MMIO_BASE = 0x3F000000; break; // for raspi2 & 3
-        case 4:  MMIO_BASE = 0xFE000000; break; // for raspi4
-        default: MMIO_BASE = 0x20000000; break; // for raspi1, raspi zero etc.
-    }
-}
+extern uint32_t MMIO_BASE;
 
 // Memory-Mapped I/O output
 static inline void mmio_write(uint32_t reg, uint32_t data)

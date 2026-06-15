@@ -28,7 +28,7 @@ reset_handler:
 	// VBAR is at 0x8000
 	ldr r3, =_start
 	mcr p15, 0, r3, c12, c0, 0
-
+    
 	// Setup the stack.
 	mov sp, #0x8000
 
