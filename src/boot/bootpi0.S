@@ -28,8 +28,16 @@ reset_handler:
 	// VBAR is at 0x8000
 	ldr r3, =_start
 	mcr p15, 0, r3, c12, c0, 0
+
+    .equ MODE_IRQ, 0x12
+    .equ MODE_SVC, 0x13
+
+    msr cpsr_c, #MODE_IRQ
+    mov sp, #0x4000
+
     
 	// Setup the stack.
+    msr cpsr_c, #MODE_SVC
 	mov sp, #0x8000
 
 	// Clear out bss.
