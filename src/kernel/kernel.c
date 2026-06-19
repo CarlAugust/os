@@ -95,7 +95,7 @@ void uart_init(int raspi)
 	// Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
 	mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
 
-	// Mask all interrupts.
+	// Mask interrupts.
 	mmio_write(UART0_IMSC, (1 << 4) | (1 << 6));
 
 	// Enable UART0, receive & transfer part of UART.

@@ -15,7 +15,7 @@ void irq_init(void) {
 }
 
 void c_irq_handler(void) {
-    uint32_t irq_1 = mmio_read(IRQ_PENDING_1);
+    uint32_t irq_1 = mmio_read(IRQ_PENDING_1); 
 
     if ((irq_1 & 2)) {
         printf("Timer event\n");
@@ -27,12 +27,12 @@ void c_irq_handler(void) {
     }
 
     uint32_t uart_event = mmio_read(UART0_MIS);
-    if (uart_event & ((1 << 4) || (1 << 6))) {
+    if (uart_event & ((1 << 4) | (1 << 6))) {
         char c = mmio_read(UART0_DR);
 
         printf("You interupted with char: %c\n", c);
 
-        mmio_write(UART0_ICR, (1 << 4) || (1 << 6));
+        mmio_write(UART0_ICR, (1 << 4) | (1 << 6));
     }
 
 }
