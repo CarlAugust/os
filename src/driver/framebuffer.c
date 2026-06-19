@@ -1,6 +1,6 @@
-#include <kernel/framebuffer.h>
-#include <kernel/kernel.h>
-#include <kernel/helper.h>
+#include <driver/framebuffer.h>
+#include <kernel/base.h>
+#include <kernel/printf.h>
 
 #define HEIGHT 480
 #define WIDTH 640
@@ -18,10 +18,29 @@ enum {
 	TAG_GET_PITCH = 0x00040008,
 };
 
+
+static inline uint32_t mbox_read(uint32_t channel) {
+	uint32_t r = 0;
+	do {
+		// Loop untill mbox data is ready
+		while (mmio_read(MBOX_STATUS) & (1U << 30));
+		r = mmio_read(MBOX_READ);
+	} while ((r & 0xF) != channel);
+
+	return r & 0xFFFFFFF0;
+}
+
+static inline void mbox_write(uint32_t v, uint32_t channel) {
+	// Loop untill mbox isnt full
+	while (mmio_read(MBOX_STATUS) & (1U << 31));
+	mmio_write(MBOX_WRITE, channel | (v & 0xFFFFFFF0));
+
+}
+
 static volatile uint32_t __attribute__((aligned(16))) mbox[36];
 int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
     
-	uart_puts("INIT_FRAME_BUFFER: _________________________________\n");
+	printf("INIT_FRAME_BUFFER: _________________________________\n");
 
 
     mbox[0] = 35*4;
@@ -72,7 +91,7 @@ int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
 	mbox_read(8);
 
 	if (mbox[1] != 0x80000000) {
-		uart_puts("Error: setting up frame_buffer\n");
+		printf("Error: setting up frame_buffer\n");
 		return -1;
 	};
 
@@ -93,7 +112,7 @@ int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
     fb_info->buf[0] = (uint8_t *)addr;
     fb_info->buf[1] = (uint8_t *)(addr + fb_info->pitch * fb_info->height);
 
-	uart_puts("INIT_FRAME_BUFFER: ___________________________\n");
+	printf("INIT_FRAME_BUFFER: ___________________________\n");
 
 	return 0;
 }

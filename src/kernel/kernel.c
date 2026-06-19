@@ -2,10 +2,12 @@
 #include <stdint.h>
 
 #include <kernel/printf.h>
-#include <kernel/kernel.h>
-#include <kernel/helper.h>
+#include <kernel/base.h>
 #include <kernel/irq.h>
 
+/*
+	FIND SOME PORPUSE FOR THESE PLEASE!!!
+*/
 void c_undef_handler(void) {
 	printf("undef handler was evoked\n");
 }
@@ -30,28 +32,17 @@ void c_fiq_handler(void) {
 	printf("fiq handler was evoked\n");
 }
 
+// ---------------------------------------------------
+
+
+
 // A Mailbox message with set clock rate of PL011 to 3MHz tag
 volatile unsigned int  __attribute__((aligned(16))) mbox[9] = {
     9*4, 0, 0x38002, 12, 8, 2, 3000000, 0 ,0
 };
 
-uint32_t MMIO_BASE = 0;
-
-// The MMIO area base address, depends on board type
-void mmio_init(int raspi)
-{
-    switch (raspi) {
-        case 2:
-        case 3:  MMIO_BASE = 0x3F000000; break; // for raspi2 & 3
-        case 4:  MMIO_BASE = 0xFE000000; break; // for raspi4
-        default: MMIO_BASE = 0x20000000; break; // for raspi1, raspi zero etc.
-    }
-}
-
 void uart_init(int raspi)
 {
-	mmio_init(raspi);
-
 	// Disable UART0.
 	mmio_write(UART0_CR, 0x00000000);
 	// Setup the GPIO pin 14 && 15.
@@ -106,10 +97,14 @@ void uart_putc(unsigned char c)
 {
 	// Wait for UART to become ready to transmit.
 	while ( mmio_read(UART0_FR) & (1 << 5) ) { }
+
 	mmio_write(UART0_DR, c);
 }
 
 void putc(void* p, char c) {
+	if (c == '\n') {
+		uart_putc('\r');
+	}
 	uart_putc(c);
 }
 
@@ -123,38 +118,8 @@ unsigned char uart_getc()
 void uart_puts(const char* str)
 {
 	for (size_t i = 0; str[i] != '\0'; i++) {
-		if (str[i] == '\n') {
-			uart_putc('\r');
-		}
 		uart_putc((unsigned char)str[i]);
 	}
-}
-
-inline uint32_t mbox_read(uint32_t channel) {
-	uint32_t r = 0;
-	do {
-		// Loop untill mbox data is ready
-		while (mmio_read(MBOX_STATUS) & (1U << 30));
-		r = mmio_read(MBOX_READ);
-	} while ((r & 0xF) != channel);
-
-	return r & 0xFFFFFFF0;
-}
-
-inline void mbox_write(uint32_t v, uint32_t channel) {
-	// Loop untill mbox isnt full
-	while (mmio_read(MBOX_STATUS) & (1U << 31));
-	mmio_write(MBOX_WRITE, channel | (v & 0xFFFFFFF0));
-
-}
-
-uint32_t timer_read_us() {
-	return mmio_read(SYSTEM_TIMER_CLO);
-}
-
-void time_wait_us(uint32_t us) {
-	uint32_t start = timer_read_us();	
-	while (timer_read_us() - start < us);
 }
 
 #if defined(__cplusplus)
@@ -179,9 +144,8 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	init_printf(NULL, putc);
 
 	irq_init();
-	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
+	printf("Welcome to this very beautiful game console firmware for raspi0\nThough its not really tested on actual hardware yet -_-\n");
 
 	while (1) {
-
 	}
 }

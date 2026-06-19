@@ -5,6 +5,10 @@
 
 enum
 {
+
+    // 0x3F000000 for raspi2 if future support
+    MMIO_BASE = 0x20000000, 
+
     // The offsets for reach register.
     GPIO_BASE = 0x200000,
 
@@ -68,8 +72,6 @@ enum
 
 };
 
-extern uint32_t MMIO_BASE;
-
 // Memory-Mapped I/O output
 static inline void mmio_write(uint32_t reg, uint32_t data)
 {
@@ -88,9 +90,3 @@ static inline void delay(int32_t count)
 	asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
 		 : "=r"(count): [count]"0"(count) : "cc");
 }
-
-void uart_puts(const char* str);
-void uart_putc(unsigned char c);
-
-uint32_t mbox_read(uint32_t channel);
-void mbox_write(uint32_t v, uint32_t channel);

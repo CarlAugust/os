@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <kernel/framebuffer.h>
+#include <driver/framebuffer.h>
 #include <sdk/graphics.h>
 
 frame_buffer_info fb_info;
@@ -9,7 +9,7 @@ void init_window() {
 	while (mbox_set_frame_buffer_info(&fb_info) < 0);
 }
 
-static inline void fill_pixel(uint32_t offset, rgb color) {
+static inline void fill_pixel(uint32_t offset, rgba color) {
 	uint8_t *p = fb_info.buf[0];
 	p[offset] = color.red;
 	p[offset + 1] = color.green;
@@ -17,7 +17,7 @@ static inline void fill_pixel(uint32_t offset, rgb color) {
 	p[offset + 3] = 0xFF;
 }
 
-void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
+void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgba color) {
 
     uint32_t row = fb_info.pitch * y;
     for (uint32_t cy = 0; cy < h && cy + y < fb_info.height; cy++) {
@@ -32,7 +32,7 @@ void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color) {
     }
 }
 
-void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgb color) {
+void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgba color) {
 	// Move to top left
 	uint32_t y1 = y - r;
 	y1 > fb_info.height ? y1 = 0 : 0;
@@ -65,7 +65,7 @@ void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgb color) {
 
 }
 
-void clear_background(rgb color) {
+void clear_background(rgba color) {
     draw_rectangle(0, 0, fb_info.width, fb_info.height, color);
 }
 

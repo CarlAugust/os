@@ -2,14 +2,17 @@
 
 #include <stdint.h>
 
-typedef struct rgb {
+typedef struct rgba {
 	uint8_t red;
 	uint8_t green;
 	uint8_t blue;
-} rgb;
+	uint8_t alpha;
+} rgba;
+
+#define RED (rgba){255, 0, 0}
 
 void init_window();
 
-void clear_background(rgb color);
-void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgb color);
-void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgb color);
+void clear_background(rgba color);
+void draw_rectangle(uint32_t x, uint32_t y, uint32_t w, uint32_t h, rgba color);
+void draw_circle(uint32_t x, uint32_t y, uint32_t r, rgba color);
