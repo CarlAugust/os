@@ -1,6 +1,12 @@
 #include <kernel/kernel.h>
 #include <kernel/printf.h>
 
+void irq_init_timer(uint32_t time_interval_ms) {
+	uint32_t time = timer_read_us();
+	mmio_write(SYSTEM_TIMER_CS, (1 << 1));
+	mmio_write(SYSTEM_TIMER_C1, time + time_interval_ms);
+}
+
 void irq_init(void) {
     printf("Initilizing IRQ interupts\n", MMIO_BASE);
     // This enables irq... maybe...
@@ -28,9 +34,11 @@ void c_irq_handler(void) {
 
     uint32_t uart_event = mmio_read(UART0_MIS);
     if (uart_event & ((1 << 4) | (1 << 6))) {
-        char c = mmio_read(UART0_DR);
-
-        printf("You interupted with char: %c\n", c);
+        
+        while (!(mmio_read(UART0_FR) & (1 << 4))) {
+            char c = mmio_read(UART0_DR); 
+            printf("%c", c); 
+        }
 
         mmio_write(UART0_ICR, (1 << 4) | (1 << 6));
     }

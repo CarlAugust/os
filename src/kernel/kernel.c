@@ -181,9 +181,6 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 	irq_init();
 	printf("Welcome to this very beautiful game console firmware for raspi2 and raspi0\nThough its not really tested on actual hardware yet -_-\n");
 
-	uint32_t time = timer_read_us();
-	mmio_write(SYSTEM_TIMER_CS, (1 << 1));
-	mmio_write(SYSTEM_TIMER_C1, time + 100);
 	while (1) {
 
 	}
