@@ -102,6 +102,7 @@ int mbox_set_frame_buffer_info(frame_buffer_info *fb_info) {
 	fb_info->x_offset = 0;
 	fb_info->y_offset = 0;
 
+    fb_info->px_depth = DEPTH;
     fb_info->px_size = DEPTH / 8;
     fb_info->pitch = mbox[33];
 

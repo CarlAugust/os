@@ -9,6 +9,8 @@ typedef struct frame_buffer_info {
 	uint32_t y_offset;
 
     uint32_t pitch;
+	
+	uint32_t px_depth;
     uint32_t px_size;
 
 	uint8_t *buf[2];
